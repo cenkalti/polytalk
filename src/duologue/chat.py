@@ -12,6 +12,7 @@ Your goal is to analyze the conversation and next user's message to determine wh
 You should always respond with the modified last message in the conversation.
 
 Example:
+
 <conversation>
 alice: Hi Bob?
 bob: Hi Alice.
