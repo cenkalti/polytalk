@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 
 from openai import AzureOpenAI
+from pydantic import BaseModel
 
 # TODO: Replace this
 PROMPT = """
@@ -27,7 +28,6 @@ Answer:
 alice: What are you doing here?
 """
 
-# TODO: Replace this with LiteLLM
 llm = AzureOpenAI()
 
 
@@ -44,20 +44,23 @@ class Chat:
         self.conversation: list[ChatMessage] = []
 
     def complete(self, chat_message: ChatMessage):
+        class UserMessage(BaseModel):
+            message: str
+
         conversation = "\n".join([f"{message.user}: {message.message}" for message in self.conversation])
         last_message = f"User name: {chat_message.user}\nUser message: {chat_message.message}"
         user_message = (
             f"<conversation>\n{conversation}\n</conversation>\n<last_message>\n{last_message}\n</last_message>"
         )
         print(user_message)
-        completion = llm.chat.completions.create(
+        response = llm.beta.chat.completions.parse(
             model=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
+            response_format=UserMessage,
             messages=[
                 {"role": "system", "content": self.prompt},
                 {"role": "user", "content": user_message},
             ],
         )
-        answer = completion.choices[0].message.content
-        print(f"Answer: {answer}")
-        assert isinstance(answer, str)
-        return answer
+        user_message = response.choices[0].message.parsed
+        assert isinstance(user_message, UserMessage)
+        return user_message.message
