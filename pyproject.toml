@@ -21,7 +21,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project.scripts]
-duologue = "duologue:cli"
+duologue = "duologue.cli:cli"
 
 [tool.pdm]
 distribution = true
