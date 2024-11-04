@@ -3,6 +3,7 @@ from dataclasses import dataclass
 
 from openai import AzureOpenAI
 
+# TODO: Replace this
 PROMPT = """
 You are a mediator between 2 humans chatting.
 
@@ -59,6 +60,3 @@ class Chat:
         print(f"Answer: {answer}")
         assert isinstance(answer, str)
         return answer
-
-
-chats = {}

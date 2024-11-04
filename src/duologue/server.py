@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Response
 from pydantic import BaseModel
 
-from .chat import Chat, ChatMessage, chats
+from .chat import Chat, ChatMessage
+
+chats = {}
 
 app = FastAPI()
 
