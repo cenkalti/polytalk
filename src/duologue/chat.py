@@ -1,7 +1,9 @@
 import os
+import random
 from dataclasses import dataclass
+from typing import Protocol
 
-from openai import AzureOpenAI
+from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
 # TODO: Replace this
@@ -15,20 +17,24 @@ You should always respond with the modified last message in the conversation.
 Example:
 
 <conversation>
-alice: Hi Bob?
+alice: Hi Bob.
 bob: Hi Alice.
 </conversation>
 
 <last_message>
 User name: alice
-User message: What the fuck are you doing here?
+User message: what the fuck are you doin here
 </last_message>
 
 Answer:
 alice: What are you doing here?
+
+Additinal instructions:
+Enhance each message with appropriate emojis that amplify the emotional content and meaning,
+while maintaining the original text. Add 2-4 relevant emojis per message.
 """
 
-llm = AzureOpenAI()
+llm = AsyncAzureOpenAI()
 
 
 @dataclass
@@ -37,14 +43,20 @@ class ChatMessage:
     message: str
 
 
+class ChatConnection(Protocol):
+    async def send_text(self, data: str) -> None: ...
+
+
 class Chat:
     def __init__(self, prompt: str):
-        self.id = os.urandom(4).hex()
+        self.id = f"{random.randint(0, 9999):04}"
         self.prompt = prompt
         self.conversation: list[ChatMessage] = []
+        self.participants: dict[str, ChatConnection] = {}
 
-    def complete(self, chat_message: ChatMessage):
+    async def complete(self, chat_message: ChatMessage):
         class UserMessage(BaseModel):
+            user: str
             message: str
 
         conversation = "\n".join([f"{message.user}: {message.message}" for message in self.conversation])
@@ -52,8 +64,8 @@ class Chat:
         user_message = (
             f"<conversation>\n{conversation}\n</conversation>\n<last_message>\n{last_message}\n</last_message>"
         )
-        print(user_message)
-        response = llm.beta.chat.completions.parse(
+        print(f"Conversation:\n{user_message}")
+        response = await llm.beta.chat.completions.parse(
             model=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],
             response_format=UserMessage,
             messages=[
@@ -62,5 +74,16 @@ class Chat:
             ],
         )
         user_message = response.choices[0].message.parsed
+        print(f"Response:\n{user_message}")
         assert isinstance(user_message, UserMessage)
         return user_message.message
+
+    def add_participant(self, name: str, connection: ChatConnection):
+        self.participants[name] = connection
+
+    def remove_participant(self, name: str):
+        del self.participants[name]
+
+    async def broadcast(self, message: str):
+        for connection in self.participants.values():
+            await connection.send_text(message)

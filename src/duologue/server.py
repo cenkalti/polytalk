@@ -1,11 +1,33 @@
-from fastapi import FastAPI, Response
+import asyncio
+
+from fastapi import FastAPI, Response, WebSocket, WebSocketDisconnect
 from pydantic import BaseModel
 
 from .chat import Chat, ChatMessage
 
-chats = {}
+# chat id -> chat
+chats: dict[str, Chat] = {}
 
 app = FastAPI()
+
+
+@app.websocket("/chat/{chat_id}/ws/{name}")
+async def websocket_endpoint(websocket: WebSocket, chat_id: str, name: str):
+    if chat_id not in chats:
+        return Response(status_code=404, content="Chat not found")
+
+    chat = chats[chat_id]
+    await websocket.accept()
+
+    chat.add_participant(name, websocket)
+    await chat.broadcast(f"{name} joined the chat")
+
+    try:
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        chat.remove_participant(name)
+        await chat.broadcast(f"{name} left the chat")
 
 
 class CreateChatRequest(BaseModel):
@@ -28,10 +50,6 @@ class SendMessageRequest(BaseModel):
     message: str
 
 
-class SendMessageResponse(BaseModel):
-    message: str
-
-
 @app.post("/chat/{chat_id}/message")
 async def send_message(chat_id: str, request: SendMessageRequest):
     if chat_id not in chats:
@@ -39,7 +57,7 @@ async def send_message(chat_id: str, request: SendMessageRequest):
 
     chat = chats[chat_id]
     chat_message = ChatMessage(request.name, request.message)
-    response = chat.complete(chat_message)
+    response = await chat.complete(chat_message)
     chat_message = ChatMessage(request.name, response)
     chat.conversation.append(chat_message)
-    return SendMessageResponse(message=response)
+    await chat.broadcast(f"{chat_message.user}: {chat_message.message}")

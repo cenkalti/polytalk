@@ -1,23 +1,43 @@
-import requests
+from typing import AsyncGenerator
+
+import httpx
+import websockets
 
 from .chat import PROMPT
 
 BASE_URL = "http://localhost:8000"
 
 
-def create_chat() -> str:
+async def create_chat() -> str:
     url = f"{BASE_URL}/chat"
     data = {"prompt": PROMPT}
-    response = requests.post(url, json=data)
-    response.raise_for_status()
-    chat_id = response.json()["id"]
-    return chat_id
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json=data)
+        response.raise_for_status()
+        chat_id = response.json()["id"]
+        return chat_id
 
 
-def send_message(chat_id: str, name: str, message: str) -> str:
+async def send_message(chat_id: str, name: str, message: str) -> str:
     url = f"{BASE_URL}/chat/{chat_id}/message"
     data = {"name": name, "message": message}
-    response = requests.post(url, json=data)
-    response.raise_for_status()
-    updated_message = response.json()["message"]
-    return updated_message
+    async with httpx.AsyncClient() as client:
+        response = await client.post(url, json=data)
+        response.raise_for_status()
+        updated_message = response.json()["message"]
+        return updated_message
+
+
+async def connect_websocket(chat_id: str, name: str) -> AsyncGenerator[str, None]:
+    url = f"{BASE_URL}/chat/{chat_id}/ws/{name}"
+    url = url.replace("http://", "ws://")
+    url = url.replace("https://", "wss://")
+
+    async for websocket in websockets.connect(url):
+        try:
+            while True:
+                message = await websocket.recv()
+                assert isinstance(message, str)
+                yield message
+        except websockets.ConnectionClosed:
+            print("Connection closed")
