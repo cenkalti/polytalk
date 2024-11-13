@@ -18,14 +18,12 @@ async def create_chat() -> str:
         return chat_id
 
 
-async def send_message(chat_id: str, name: str, message: str) -> str:
+async def send_message(chat_id: str, name: str, message: str):
     url = f"{BASE_URL}/chat/{chat_id}/message"
     data = {"name": name, "message": message}
     async with httpx.AsyncClient() as client:
         response = await client.post(url, json=data)
         response.raise_for_status()
-        updated_message = response.json()["message"]
-        return updated_message
 
 
 async def connect_websocket(chat_id: str, name: str) -> AsyncGenerator[str, None]:
@@ -40,4 +38,4 @@ async def connect_websocket(chat_id: str, name: str) -> AsyncGenerator[str, None
                 assert isinstance(message, str)
                 yield message
         except websockets.ConnectionClosed:
-            print("Connection closed")
+            print("Connection closed. Reconnecting...")

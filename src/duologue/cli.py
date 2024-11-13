@@ -2,9 +2,10 @@ import asyncio
 import signal
 from functools import wraps
 
-import aioconsole
 import typer
 import uvicorn
+from prompt_toolkit import PromptSession
+from prompt_toolkit.patch_stdout import patch_stdout
 
 from . import client as chat_client
 from .server import app
@@ -40,16 +41,18 @@ def server(host: str = "127.0.0.1", port: int = 8000):
 async def client(name: str, chat_id: str | None = None):
     if not chat_id:
         chat_id = await chat_client.create_chat()
-        print(f"Created chat: {chat_id}")
+        print(f"Created chat with id: {chat_id}")
 
-    channel_messages = chat_client.connect_websocket(chat_id, name)
+    session = PromptSession()
 
-    async def print_channel_messages():
-        async for message in channel_messages:
+    async def read_user_input():
+        while True:
+            user_message = await session.prompt_async(">>> ")
+            await chat_client.send_message(chat_id, name, user_message)
+
+    async def print_incoming_messages():
+        async for message in chat_client.connect_websocket(chat_id, name):
             print(message)
 
-    asyncio.create_task(print_channel_messages())
-
-    while True:
-        user_message = await aioconsole.ainput()
-        await chat_client.send_message(chat_id, name, user_message)
+    with patch_stdout():
+        await asyncio.gather(read_user_input(), print_incoming_messages())
