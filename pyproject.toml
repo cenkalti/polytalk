@@ -1,5 +1,5 @@
 [project]
-name = "duologue"
+name = "polytalk"
 version = "0.1.0"
 description = "Default template for PDM package"
 authors = [
@@ -23,7 +23,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project.scripts]
-duologue = "duologue.cli:cli"
+polytalk = "polytalk.cli:cli"
 
 [tool.pdm]
 distribution = true

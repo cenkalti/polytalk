@@ -1,6 +1,6 @@
-# duologue
+# polytalk
 
-Duologue is a simple chat app for LLM mediated human conversations.
+Polytalk is a simple chat app for LLM mediated human conversations.
 
 ## UX
 - user opens http://localhost:8000
