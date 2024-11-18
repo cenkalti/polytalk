@@ -56,3 +56,15 @@ async def client(name: str, chat_id: str | None = None):
 
     with patch_stdout():
         await asyncio.gather(read_user_input(), print_incoming_messages())
+
+
+@cli.command()
+@cli_coro()
+async def get_prompt(chat_id: str):
+    print(await chat_client.get_prompt(chat_id))
+
+
+@cli.command()
+@cli_coro()
+async def update_prompt(chat_id: str, prompt: str):
+    await chat_client.update_prompt(chat_id, prompt)

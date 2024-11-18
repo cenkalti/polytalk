@@ -61,3 +61,21 @@ async def send_message(chat_id: str, request: SendMessageRequest):
     chat_message = ChatMessage(request.name, response)
     chat.conversation.append(chat_message)
     await chat.broadcast(f"{chat_message.user}: {chat_message.message}")
+
+
+@app.get("/chat/{chat_id}/prompt")
+async def get_prompt(chat_id: str):
+    if chat_id not in chats:
+        return Response(status_code=404, content="Chat not found")
+
+    chat = chats[chat_id]
+    return chat.prompt
+
+
+@app.post("/chat/{chat_id}/prompt")
+async def update_prompt(chat_id: str, request: CreateChatRequest):
+    if chat_id not in chats:
+        return Response(status_code=404, content="Chat not found")
+
+    chat = chats[chat_id]
+    chat.prompt = request.prompt
