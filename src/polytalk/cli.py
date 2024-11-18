@@ -1,5 +1,5 @@
 import asyncio
-import signal
+import os
 from functools import wraps
 
 import typer
@@ -14,17 +14,18 @@ cli = typer.Typer()
 
 
 # https://github.com/fastapi/typer/issues/950
-def cli_coro(signals=(signal.SIGHUP, signal.SIGTERM, signal.SIGINT), shutdown_func=None):
+def cli_coro():
     """Decorator function that allows defining coroutines with click."""
 
     def decorator_cli_coro(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            loop = asyncio.get_event_loop()
-            if shutdown_func:
-                for ss in signals:
-                    loop.add_signal_handler(ss, shutdown_func, ss, loop)
-            return loop.run_until_complete(f(*args, **kwargs))
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(f(*args, **kwargs))
+            except KeyboardInterrupt:
+                os._exit(1)
 
         return wrapper
 
@@ -68,3 +69,7 @@ async def get_prompt(chat_id: str):
 @cli_coro()
 async def update_prompt(chat_id: str, prompt: str):
     await chat_client.update_prompt(chat_id, prompt)
+
+
+if __name__ == "__main__":
+    cli()
