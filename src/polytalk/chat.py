@@ -28,8 +28,7 @@ Answer:
 alice: What are you doing here?
 
 Additinal instructions:
-Enhance each message with appropriate emojis that amplify the emotional content and meaning,
-while maintaining the original text. Add 2-4 relevant emojis per message.
+- Add appropriate emojis based on message content
 """
 
 llm = AsyncAzureOpenAI()
