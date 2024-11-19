@@ -1,5 +1,4 @@
 import os
-import random
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -48,7 +47,6 @@ class ChatConnection(Protocol):
 
 class Chat:
     def __init__(self):
-        self.id = f"{random.randint(0, 9999):04}"
         self.prompt = INITIAL_PROMPT
         self.conversation: list[ChatMessage] = []
         self.participants: dict[str, ChatConnection] = {}
