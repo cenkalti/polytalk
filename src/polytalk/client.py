@@ -3,19 +3,7 @@ from typing import AsyncGenerator
 import httpx
 import websockets
 
-from .chat import PROMPT
-
 BASE_URL = "http://localhost:8000"
-
-
-async def create_chat() -> str:
-    url = f"{BASE_URL}/chat"
-    data = {"prompt": PROMPT}
-    async with httpx.AsyncClient() as client:
-        response = await client.post(url, json=data)
-        response.raise_for_status()
-        chat_id = response.json()["id"]
-        return chat_id
 
 
 async def send_message(chat_id: str, name: str, message: str):

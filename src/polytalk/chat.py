@@ -6,8 +6,7 @@ from typing import Protocol
 from openai import AsyncAzureOpenAI
 from pydantic import BaseModel
 
-# TODO: Replace this
-PROMPT = """
+INITIAL_PROMPT = """
 You are a mediator between 2 humans chatting.
 
 Your goal is to analyze the conversation and next user's message to determine what message to add to the conversation.
@@ -48,9 +47,9 @@ class ChatConnection(Protocol):
 
 
 class Chat:
-    def __init__(self, prompt: str):
+    def __init__(self):
         self.id = f"{random.randint(0, 9999):04}"
-        self.prompt = prompt
+        self.prompt = INITIAL_PROMPT
         self.conversation: list[ChatMessage] = []
         self.participants: dict[str, ChatConnection] = {}
 

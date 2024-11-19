@@ -39,11 +39,7 @@ def server(host: str = "127.0.0.1", port: int = 8000):
 
 @cli.command()
 @cli_coro()
-async def client(name: str, chat_id: str | None = None):
-    if not chat_id:
-        chat_id = await chat_client.create_chat()
-        print(f"Created chat with id: {chat_id}")
-
+async def client(name: str, chat_id: str):
     session = PromptSession()
 
     async def read_user_input():
