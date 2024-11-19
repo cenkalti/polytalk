@@ -45,11 +45,11 @@ class SendMessageRequest(BaseModel):
 @app.post("/chat/{chat_id}/message")
 async def send_message(chat_id: str, request: SendMessageRequest):
     chat = get_chat(chat_id)
-    chat_message = ChatMessage(request.name, request.message)
+    chat_message = ChatMessage(user=request.name, message=request.message)
     response = await chat.complete(chat_message)
-    chat_message = ChatMessage(request.name, response)
-    chat.conversation.append(chat_message)
-    await chat.broadcast(f"{chat_message.user}: {chat_message.message}")
+    for message in response:
+        chat.conversation.append(message)
+        await chat.broadcast(f"{message.user}: {message.message}")
 
 
 @app.get("/chat/{chat_id}/prompt")
